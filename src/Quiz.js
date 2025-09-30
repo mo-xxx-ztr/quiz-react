@@ -10,18 +10,22 @@ function Quiz() {
   const [selected, setSelected] = useState(null); // stocke le choix cliqué
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      handleAnswer(null);
-      return;
-    }
+ useEffect(() => {
+  if (timeLeft <= 0) return;
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
+  const timer = setInterval(() => {
+    setTimeLeft((prev) => {
+      if (prev <= 1) {
+        handleAnswer(null);   // appelé au moment où le timer finit
+        return 15;            // on remettra 15 dans handleAnswer
+      }
+      return prev - 1;
+    });
+  }, 1000);
 
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+  return () => clearInterval(timer);
+}, [timeLeft]);
+
 
   const handleAnswer = (option) => {
     setSelected(option);
