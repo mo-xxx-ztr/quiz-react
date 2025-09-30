@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import questions from "./questions";
 import "./Quiz.css";
@@ -10,44 +10,46 @@ function Quiz() {
   const [selected, setSelected] = useState(null); // stocke le choix cliqué
   const navigate = useNavigate();
 
- useEffect(() => {
-  if (timeLeft <= 0) return;
+  // Définir handleAnswer avec useCallback pour que useEffect puisse l'utiliser sans warning
+  const handleAnswer = useCallback(
+    (option) => {
+      setSelected(option);
 
-  const timer = setInterval(() => {
-    setTimeLeft((prev) => {
-      if (prev <= 1) {
-        handleAnswer(null);   // appelé au moment où le timer finit
-        return 15;            // on remettra 15 dans handleAnswer
+      let newScore = score;
+      if (option && option === questions[current].answer) {
+        newScore = score + 1;
+        setScore(newScore);
       }
-      return prev - 1;
-    });
-  }, 1000);
 
-  return () => clearInterval(timer);
-}, [timeLeft]);
+      setTimeout(() => {
+        const next = current + 1;
+        if (next < questions.length) {
+          setCurrent(next);
+          setSelected(null);
+          setTimeLeft(15);
+        } else {
+          navigate("/result", {
+            state: { score: newScore, total: questions.length },
+          });
+        }
+      }, 1000);
+    },
+    [current, score, navigate]
+  );
 
-
-  const handleAnswer = (option) => {
-    setSelected(option);
-
-    let newScore = score;
-    if (option && option === questions[current].answer) {
-      newScore = score + 1;
-      setScore(newScore);
+  // Timer
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      handleAnswer(null);
+      return;
     }
 
-    // attendre 1 sec pour montrer la couleur puis passer à la suivante
-    setTimeout(() => {
-      const next = current + 1;
-      if (next < questions.length) {
-        setCurrent(next);
-        setSelected(null);
-        setTimeLeft(15);
-      } else {
-        navigate("/result", { state: { score: newScore, total: questions.length } });
-      }
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
-  };
+
+    return () => clearInterval(timer);
+  }, [timeLeft, handleAnswer]);
 
   const progress = ((current + 1) / questions.length) * 100;
 
@@ -85,10 +87,7 @@ function Quiz() {
       </p>
 
       <div className="progress-container">
-        <div
-          className="progress-bar"
-          style={{ width: `${progress}%` }}
-        ></div>
+        <div className="progress-bar" style={{ width: `${progress}%` }}></div>
       </div>
     </div>
   );
