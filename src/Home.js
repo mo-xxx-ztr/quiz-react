@@ -5,6 +5,7 @@ function Home() {
   return (
     <div className="home-container">
       <h1 className="home-title">Bienvenue au Quiz! 🎉</h1>
+    <h2>Frontend uniquement — backend non inclus (hébergement payant pour node.js).</h2>
       
       <Link to="/quiz">
         <button className="start-btn">Commencer le Quiz</button>
